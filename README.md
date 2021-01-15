@@ -12,7 +12,7 @@ Install requirements:
 `pip install -r requirements.txt`
 
 #### Step 3  
-Get your Atlas-MongoDB connection string by following the steps on the website.
+Get your Atlas-MongoDB connection string by following [these](https://docs.mongodb.com/guides/cloud/connectionstring/) steps on the website.
 
 #### Step 4
 Run the program:  

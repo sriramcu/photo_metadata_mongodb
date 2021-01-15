@@ -12,7 +12,6 @@ from PIL import Image
 from PIL import ImageTk
 from PIL.ExifTags import TAGS
 import time
-import sys
 
 root = Tk()
 root.rowconfigure(0,weight=1)
@@ -20,12 +19,13 @@ root.columnconfigure(0,weight=1)
 root.title('DBMS Image Project')
 root.geometry("700x700")
 imagelist = []
-cluster = MongoClient(sys.argv[1])
+cluster = MongoClient("mongodb+srv://test:password13@cluster0.6r7wo.mongodb.net/SelfStudy?retryWrites=true&w=majority")
 db = cluster["SelfStudy"]
 fs = gridfs.GridFS(db)
 fsfiles = db["fs.files"]
 test = db["test"]
 selecttext = 'Select Camera Model'#drop down mnenu default value
+clicked=StringVar()
 
 def colinit():
 	#this function is just a utility function to set initial values
@@ -34,7 +34,9 @@ def colinit():
 	test.update_one({"_id":1},{"$addToSet":{"models":selecttext}})
 
 def goback():
-		start_frame.tkraise()
+	start_frame.tkraise()
+
+
 
 def display(images):
 	# Clear Main Frame and add stuff again
@@ -57,6 +59,9 @@ def display(images):
 	# Add that New frame To a Window In The Canvas
 	my_canvas.create_window((0,0), window=second_frame, anchor="nw")
 	
+	back_button = Button(second_frame,text="Go Back",command=goback)
+	back_button.grid(row=0,column=0,sticky=W,padx=10,pady=10)
+	
 	imagelist.clear()
 	rowcount = 0
 	for result in images:
@@ -73,8 +78,9 @@ def display(images):
 		#Label(second_frame,image=imagelist[rowcount],bg="white").grid(row=rowcount,column=1,sticky=W,padx=10,pady=10)
 		rowcount+=1
 
-	back_button = Button(second_frame,text="Go Back",command=goback)
-	back_button.grid(row=rowcount+1,column=0,sticky=W,padx=10,pady=10)
+	back_button2 = Button(second_frame,text="Go Back",command=goback)
+	back_button2.grid(row=rowcount+1,column=0,sticky=W,padx=10,pady=10)
+
 def upload():
 	global drop
 	filenames = filedialog.askopenfilenames(initialdir="C:",title="Select a file",filetypes=[("jpg files","*.jpg")])
@@ -93,18 +99,14 @@ def upload():
 			fsfiles.update_one({"_id":a},{"$set":{"metadata.model":model}})
 			test.update_one({"_id":1},{"$addToSet":{"models":model}})
 			
-			
 		except Exception as e:
 			print("Upload unsuccesful")
 			print(e)
 			
 		else:
 			print("Upload Successful")
-			
-		
 
-	r = (test.find_one({"_id":1}))(test.find_one({"_id":1}))['models']
-	clicked=StringVar()
+	r = (test.find_one({"_id":1}))['models']
 	clicked.set(r[0])
 	drop.destroy()
 	drop = OptionMenu(start_frame, clicked, *r)
@@ -130,6 +132,29 @@ def search():
 		imagesfoundcam=fsfiles.find({"metadata.ogdate":{"$gte":dt,"$lt":dt2},"metadata.model":cameramodel})
 		display(imagesfoundcam)
 
+def mindate():
+	inputcamera = clicked.get()
+	if inputcamera == selecttext:
+		reqdate = fsfiles.aggregate([{"$group":{"_id":{},"rdate":{"$min":"$metadata.ogdate"}}}])
+	else:
+		reqdate = fsfiles.aggregate([{"$match":{"metadata.model":inputcamera}},{"$group":{"_id":{},"rdate":{"$min":"$metadata.ogdate"}}}])
+	for md in reqdate:
+		rd = md['rdate']
+
+	oplist=fsfiles.find({"metadata.ogdate":rd})
+	display(oplist)
+
+def maxdate():
+	inputcamera = clicked.get()
+	if inputcamera == selecttext:
+		reqdate = fsfiles.aggregate([{"$group":{"_id":{},"rdate":{"$max":"$metadata.ogdate"}}}])
+	else:
+		reqdate = fsfiles.aggregate([{"$match":{"metadata.model":inputcamera}},{"$group":{"_id":{},"rdate":{"$max":"$metadata.ogdate"}}}])
+	for md in reqdate:
+		rd = md['rdate']
+
+	oplist=fsfiles.find({"metadata.ogdate":rd})
+	display(oplist)
 
 start_frame = Frame(root)
 main_frame = Frame(root)
@@ -140,7 +165,6 @@ main_frame.grid(row=0,column=0,sticky='nsew')
 start_frame.tkraise()
 #images = fsfiles.find({"length":{"$gt":25}})
 #display()
-
 #ROW 0
 label1 = Label(start_frame,text="Upload image(s) to the database:-",font=("Helvetica",18),bd=1)
 label1.grid(row=0,column=0,sticky=W,padx=10,pady=10)
@@ -173,7 +197,6 @@ end_date.grid(row=4,column=1,sticky=W,padx=10,pady=10)
 
 
 res = (test.find_one({"_id":1}))['models']
-clicked=StringVar()
 clicked.set(res[0])
 drop = OptionMenu(start_frame, clicked, *res)
 drop.grid(row=4,column=2,sticky=W,padx=10,pady=10)
@@ -182,7 +205,17 @@ drop.grid(row=4,column=2,sticky=W,padx=10,pady=10)
 search_btn = Button(start_frame,text='Search',command=search)
 search_btn.grid(row=5,column=0,sticky=W,padx=10,pady=10)
 
+mindate_btn = Button(start_frame,text='Minimum Date',command=mindate)
+mindate_btn.grid(row=5,column=1,sticky=W,padx=10,pady=10)\
+
+maxdate_btn = Button(start_frame,text='Maximum Date',command=maxdate)
+maxdate_btn.grid(row=5,column=2,sticky=W,padx=10,pady=10)
+
+#maxdate_btn = Button(start_frame,text='Search',command=search)
+#maxdate_btn.grid(row=6,column=1,sticky=W,padx=10,pady=10)
+
 #ROW 6
+
 exit_btn = Button(start_frame,text='Exit',command=lambda:root.destroy())
 exit_btn.grid(row=6,column=0,sticky=W,padx=10,pady=10)
 

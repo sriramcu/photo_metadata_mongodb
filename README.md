@@ -1,5 +1,5 @@
 # photo_metadata_mongodb
-Store and retrieve images from MongoDB using GridFS and exif metadata.
+Store and retrieve images from MongoDB using GridFS and exif metadata, based on date of **capture** and camera model used to capture the image. The advantage being that you can access your photos in a categorised manner anywhere.
 
 
 ### Usage

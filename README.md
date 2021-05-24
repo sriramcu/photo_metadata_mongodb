@@ -12,7 +12,7 @@ Install requirements:
 `pip install -r requirements.txt`
 
 #### Step 3  
-Get your Atlas-MongoDB connection string by following the steps on the website.
+Get your Atlas-MongoDB connection string by following the steps on the website. Modify lines 24,26,27 in driver.py to match the values entered by you when creating your cluster.
 
 #### Step 4
 Run the program:  

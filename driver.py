@@ -3,6 +3,7 @@ from tkinter import ttk
 from tkinter import filedialog
 from tkcalendar import *
 import os
+import sys
 import pymongo
 from pymongo import MongoClient
 from datetime import datetime
@@ -19,7 +20,7 @@ root.columnconfigure(0,weight=1)
 root.title('DBMS Image Project')
 root.geometry("700x700")
 imagelist = []
-cluster = MongoClient("mongodb+srv://test:password13@cluster0.6r7wo.mongodb.net/SelfStudy?retryWrites=true&w=majority")
+cluster = MongoClient(sys.argv[1])
 db = cluster["SelfStudy"]
 fs = gridfs.GridFS(db)
 fsfiles = db["fs.files"]
